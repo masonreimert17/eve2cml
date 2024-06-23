@@ -36,7 +36,6 @@ class EVEnode:
     left : str
     top : str
     
-    interfaces : list = []
 
     # left out delay, sat, icon
 
@@ -54,16 +53,15 @@ class EVEnode:
         self.uuid = uuid
         self.firstMAC = firstMAC
         self.qemuOptions = qemuOptions
-        self.qemuVersion = qemuVersion,
-        self.qemuArch = qemuArch,
-        self.configID = configID,
-        self.left = left,
+        self.qemuVersion = qemuVersion
+        self.qemuArch = qemuArch
+        self.configID = configID
+        self.left = left
         self.top = top
+        self.interfaces : list = []
 
         pass
 
-    def addInterface(self, interface):
-        self.interfaces.append(interface)
 
 class EVEinterface:
     id: int
@@ -94,5 +92,8 @@ class EVEconfig:
     id : int
     encodedConfig : str
 
-    def __init__(self):
+    def __init__(self, id, encodedConfig):
+        self.id = id
+        self.encodedConfig = encodedConfig
+        
         pass
