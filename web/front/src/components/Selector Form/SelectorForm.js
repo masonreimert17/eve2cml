@@ -19,7 +19,7 @@ export default function SelectorForm({handleFile}){
           <h1>Upload Eve File</h1>
           <div className='d-flex'>
           <input type="file" onChange={handleChange}/>
-          {!file ? '' : <button >Upload</button>}
+          
           
           </div>
           </div>
