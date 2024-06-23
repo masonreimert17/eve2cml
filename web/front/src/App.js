@@ -2,13 +2,44 @@ import logo from './logo.svg';
 import './App.css';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
+import SelectorForm from './components/Selector Form/SelectorForm';
+import { useState, useEffect } from 'react';
+import { apiGet } from './components/HelperFunctions';
+
 function App() {
+  const [hello, setHello] = useState('');
+
+  useEffect(() => {
+    async function fetchData() {
+      const result = await apiGet('hello');
+      setHello(result);
+    }
+    fetchData();
+  }, []);
+
+ const  handleFile=(file)=>{
+    const data = new FormData
+    data.append('file_from_react', file)
+    fetch(window.origin+'/api/ingestFile',{
+      method:'post',
+      body:data
+    }).then(res=>res.json()).then(body=>{
+      console.log(body)
+    })
+    
+ }
   return (
-    <Navbar className="bg-body-tertiary">
-        <Container>
-          <Navbar.Brand href="#home">Brand link</Navbar.Brand>
-        </Container>
+    <>
+      <Navbar className="bg-body-tertiary">
+        <Navbar.Brand className='ms-3' href="#home">Converter</Navbar.Brand>
       </Navbar>
+
+      <Container>
+          <div className='d-flex justify-content-center'>
+          <SelectorForm handleFile={handleFile}/>
+        </div>
+      </Container>
+    </>
   );
 }
 
