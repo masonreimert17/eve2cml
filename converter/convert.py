@@ -1,7 +1,11 @@
-from EVEClasses import EVElab, EVEnode, EVEinterface
+from EVEClasses import EVElab, EVEnode, EVEinterface, EVEconfig
+from CMLClasses import CMLLab, CMLNode, CMLInterface
 import xmltodict
 import yaml
+import re
+import base64
 
+import json #temp
 
 #finish by parsing out networks, and configs
 def deconstructEVELab(UNLFilePath):
@@ -15,6 +19,15 @@ def deconstructEVELab(UNLFilePath):
                  xml_dict["lab"]["@version"], 
                  xml_dict["lab"]["@author"], 
                  xml_dict["lab"]["description"])
+
+
+
+    #extract the configs for later use to resolve from nodes
+    for config in xml_dict["lab"]["objects"]["configs"]["config"]:
+        id = config["@id"]
+        encodedText = config["#text"]
+        lab.configs.append(EVEconfig(id, encodedText))
+
 
 
     #loop though the nodes and create a node class instansiation for each node
@@ -42,7 +55,8 @@ def deconstructEVELab(UNLFilePath):
         )
 
         for interface in XMLnode["interface"]:
-            node.addInterface(EVEinterface(
+            print("adding " + interface["@name"] + " to " + XMLnode["@name"])
+            node.interfaces.append(EVEinterface(
                 id = interface["@id"],
                 name = interface["@name"],
                 networkID = interface["@network_id"]
@@ -73,7 +87,9 @@ def constructCMLLab(EVElabInput : EVElab):
 
     print(EVElabInput.nodes)
 
-    idx = 0
+    links = {}
+
+    # populate this with the links {legacyID, n1, n2, i1, i2}
 
     for node in EVElabInput.nodes:
 
@@ -82,6 +98,9 @@ def constructCMLLab(EVElabInput : EVElab):
 
         if node.template == "vios": 
             node.template = "iosv"
+
+
+        interfaces, links = convertInterfaces(node.template,node.interfaces, node.id, links)
 
         nodeDict = {
             #add params to node
@@ -93,14 +112,77 @@ def constructCMLLab(EVElabInput : EVElab):
             "cpus" : int(node.cpu),
             "cpu_limit" : int(node.cpuLimit),
             "ram" : int(node.ram),
-            "x" : int(node.left[0]), #TODO: fix this, this should not be a Touple but somewhere between XML and here it becomes one!
-            "y" : int(node.top)
+            "x" : int(node.left),
+            "y" : int(node.top),
+            "interfaces" : interfaces
 
         }
+
+        for config in EVElabInput.configs:
+            if node.configID == config.id:
+                nodeDict["configuration"] = []
+                bConfig = base64.b64decode(config.encodedConfig)
+                decodedConfig = bConfig.decode('ascii').replace('\\n', '\n')
+                nodeDict["configuration"].append({
+                    "name" : "ios_config.txt",
+                    "content" : decodedConfig
+                })
+        print(f"{decodedConfig}")
+
 
         #add node to tree
         CMLYAML["nodes"].append(nodeDict)
 
-        idx += 1
+    linksList = [value for key, value in links.items()]
+
+    #add links to tree
+    CMLYAML["links"] = linksList
 
     return(yaml.dump(CMLYAML))
+
+def convertInterfaces(nodeType, inputInterfaces, nodeID, links):
+    networkIDs = []
+    lidCounter = 0
+
+    if nodeType == "iosv":
+        interfaces = []
+        idx = 0
+        i = 0
+        print(interfaces)
+
+        for interface in inputInterfaces:
+
+            maxInterface = 0
+
+            #normalize interface name
+            if re.search(r"Gi\d+/\d+", interface.name):
+                if int(interface.name.split("/")[1]) > maxInterface:
+                    maxInterface = interface.name.split("/")[1]
+            idx +=1
+
+            if interface.networkID:
+                if interface.networkID in links:
+                    links[interface.networkID]["n2"] =  "n" + str(nodeID)
+                    links[interface.networkID]["i2"] =  "i" + interface.name.split("/")[1]
+                else:
+                    links[interface.networkID] = {
+                        "id" : "l" + str(lidCounter),
+                        "n1" : "n" + str(nodeID),
+                        "i1" : "i" + interface.name.split("/")[1],
+                        "label" : "From EVE -> Legacy ID " + str(interface.networkID)
+                    }
+                    lidCounter+=1
+
+
+        while i <= int(maxInterface):
+            interfaces.append({
+                "id" : "i" + str(i), 
+                "label" : "GigabitEthernet0/" + str(i),
+                "type" : "physical",
+                "slot" : i
+            })
+            i+=1
+
+        print(links)
+        return(interfaces, links)
+

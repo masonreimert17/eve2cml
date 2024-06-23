@@ -42,6 +42,7 @@ class CMLInterface:
     id : int
     label: str
     type: str
+    blank: bool
 
     def __init__(self, id, label, type):
         self.id = id
@@ -53,6 +54,20 @@ class CMLInterface:
 class CMLNetwork:
     def __init__(self):
         pass
+
+class CMLLink:
+    id : str
+    n1: str
+    n2 : str
+    i1 : str
+    i2 : str
+    label : str
+
+    def __init__(self):
+        pass
+
+class CMLLinkMapper:
+    pass
 
 class CMLConfig:
     def __init__(self):
