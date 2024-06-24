@@ -14,7 +14,19 @@ You can skip the hasstle and convert your labs for free at cml2eve.com which is 
 
 ### Converting Locally (on your machine):
 You can clone this repo and run the convert.py Python script to convert labs using the same code we use behind the scences in the cloud implamentation.
+```Bash
+#start by cloneing the repo
+git clone https://github.com/masonreimert17/eve2cml.git
 
+#install requirements via pip
+python3 -m pip install -r requirements.txt
+
+#cd into the converter folder
+cd eve2cml/web/back/converter
+
+#run the converter with the required params
+python3 convert.py -in lab.unl -out lab.yaml
+```
 ## Current Restrictions
 Feel free to open a PR or reach out to us if you want to contribute to fixing any of these, we are working on them as well!
 - Slot numbers for devices that use slot style interface numbering only support slot 0, ex 0/1-9, this will be fixed by 1.0.
