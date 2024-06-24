@@ -28,7 +28,6 @@ class EVEnode:
     ram : int
     ethernet : int
     uuid : str
-    firstMAC : str
     qemuOptions : str
     qemuVersion : float
     qemuArch : str
@@ -39,7 +38,7 @@ class EVEnode:
 
     # left out delay, sat, icon
 
-    def __init__(self, id, name, type, template, image, console, cpu, cpuLimit, ram, ethernet, uuid, firstMAC, qemuOptions, qemuVersion, qemuArch, configID, left, top):
+    def __init__(self, id, name, type, template, image, console, cpu, cpuLimit, ram, ethernet, uuid, qemuOptions, qemuVersion, qemuArch, configID, left, top):
         self.id = id
         self.name = name
         self.type = type
@@ -51,7 +50,6 @@ class EVEnode:
         self.ram = ram
         self.ethernet = ethernet
         self.uuid = uuid
-        self.firstMAC = firstMAC
         self.qemuOptions = qemuOptions
         self.qemuVersion = qemuVersion
         self.qemuArch = qemuArch
@@ -95,5 +93,5 @@ class EVEconfig:
     def __init__(self, id, encodedConfig):
         self.id = id
         self.encodedConfig = encodedConfig
-        
+
         pass
