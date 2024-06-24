@@ -12,15 +12,17 @@ export default function SelectorForm({handleFile}){
     
     handleFile(selectedFile)
   }
-    
+    const clickUpload = ()=>{
+      document.getElementById('upload-input').click()
+    }
   return (
-    <div className="App">
+    <div className="App" >
             
           <h1>Upload Eve File</h1>
-          <div className='d-flex'>
-          <input type="file" onChange={handleChange}/>
-          {!file ? '' : <button >Upload</button>}
-          
+          <div className='d-flex justify-content-center'>
+          <input id='upload-input' style={{display:'none'}} type="file" onChange={handleChange}/>
+          <button className='btn btn-primary' onClick={clickUpload}>Upload</button>
+         
           </div>
           </div>
   );
