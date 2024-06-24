@@ -42,14 +42,21 @@ function saveAsFile(text, filename) {
     a.click(); // triggering it manually
   }
   export function tableToJson(table) { 
-    var data = [];
-    for (var i = 1; i < table.rows.length; i++) { 
-        var tableRow = table.rows[i]; 
-        var rowData = []; 
-        for (var j = 0; j < tableRow.cells.length; j++) { 
-            rowData.push(tableRow.cells[j].innerHTML);
-        } 
-        data.push(rowData); 
-    } 
-    return data; 
+    const headers = [...table.querySelectorAll("thead > tr > th")].map(
+        (cell) => cell.innerText
+      );
+    
+      const items = [];
+    
+      for (const row of table.querySelectorAll("tbody > tr")) {
+        const item = {};
+    
+        for (const [index, cell] of [...row.children].entries()) {
+          item[headers[index]] = cell.innerText;
+        }
+    
+        items.push(item);
+      }
+    
+      return items;
 }
