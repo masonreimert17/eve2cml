@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from io import BytesIO
 import uuid
-from converter import convert, validate
+from converter import convert
 
 
 app = Flask(__name__)
@@ -25,11 +25,16 @@ def ingestFile():
         fileName = str(myuuid)+'.'+filename.split('.')[-1]
         with open('./static/'+fileName, "wb") as f:
             f.write(file_bytesio_object.getbuffer())
-        
         f.close
         d['download-url'] = fileName
+
+        #link to converter
+        d['validation'] = convert.validate(str(myuuid))
+
     except Exception as e:
         print(f"Couldn't upload file {e}")
         d['status'] = 0
     return jsonify(d)
 
+if __name__ == "__main__":
+    app.run(debug=True)

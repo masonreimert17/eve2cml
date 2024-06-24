@@ -1,10 +1,10 @@
-from EVEClasses import EVElab, EVEnode, EVEinterface, EVEconfig
-from CMLClasses import CMLLab, CMLNode, CMLInterface
+from classes import EVElab, EVEnode, EVEinterface, EVEconfig
 import xmltodict
 import yaml
 import re
 import base64
 import json
+import argparse
 
 def deconstructEVELab(UNLFilePath):
 
@@ -21,7 +21,7 @@ def deconstructEVELab(UNLFilePath):
             
     return(lab)
 
-def constructCMLLab(EVElabInput : EVElab):
+def constructCMLLab(EVElabInput : EVElab, YAMLPath):
     
     CMLYAML = bootstrapCML()
 
@@ -29,7 +29,9 @@ def constructCMLLab(EVElabInput : EVElab):
     
     insertCMLNodesLinks(EVElabInput, CMLYAML)
 
-    return(yaml.dump(CMLYAML))
+    with open(YAMLPath, 'w') as file:
+        yaml.dump(CMLYAML, file, default_flow_style=False)
+        return(1)
 
 def validate(uuid):
 
@@ -56,7 +58,6 @@ def validate(uuid):
             "cisco_target" : ""
         })
     return(package)
-
 
 # [-------------------- Supporting Functions --------------------]
 
@@ -339,3 +340,25 @@ def insertCMLNodesLinks(EVElabInput, CMLYAML):
 
     #add links to tree
     CMLYAML["links"] = linksList
+
+
+'''
+Main Function - For direct invocation of this file via terminal
+    + -i : input file
+    + -o : output file
+'''
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Convert EVE-NG Lab to CML Lab')
+    parser.add_argument('-in', '--input_path', type=str, required=True, help='Input Lab UNL File')
+    parser.add_argument('-out', '--output_path', type=str, required=True, help='Output Lab YAML File')
+    
+    args = parser.parse_args()
+    
+    input_string = args.input_path
+    output_string = args.output_path
+    
+    EVELab = deconstructEVELab(input_string)
+    CMLLab = constructCMLLab(EVELab, output_string)
+
+    print(f"Lab saved to: {output_string}")
+
