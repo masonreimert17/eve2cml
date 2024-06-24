@@ -1,6 +1,6 @@
 import convert
 
-EVELab = convert.deconstructEVELab("sample4.unl")
+EVELab = convert.deconstructEVELab("sample.unl")
 
 CMLLab = convert.constructCMLLab(EVELab)
 

@@ -31,6 +31,33 @@ def constructCMLLab(EVElabInput : EVElab):
 
     return(yaml.dump(CMLYAML))
 
+def validate(uuid):
+
+    package = {}
+
+    #get templates available
+    mappings = getMappings()
+    for mapping in mappings["node_definitions"]:
+        package["cisco_templates_avail"].append(mapping["targetDef"])
+
+    lab = deconstructEVELab("../static/" + uuid)
+
+    for node in lab.nodes:
+        targetDef = ""
+
+        for mapping in mappings["node_definitions"]:
+            if mapping["sourceDef"] == node.template:
+                targetDef = mapping["targetDef"]
+
+        package["nodes"].append({
+            "node_id" : node.id,
+            "node_name" : node.name,
+            "eve_template" : node.template,
+            "cisco_target" : ""
+        })
+    return(package)
+
+
 # [-------------------- Supporting Functions --------------------]
 
 '''
@@ -105,6 +132,7 @@ def createLinks(inputInterfaces, nodeID, links, nodeType):
             lidCounter+=1
 
     return(links)
+
 # [-------------------- Extraction Functions --------------------]
 
 '''
@@ -134,10 +162,10 @@ Create Lab (source lab)
     + xml_dict : dict of UNL file outputted from openUNL()
 '''
 def createLab(xml_dict):
-    return(EVElab(xml_dict["lab"]["@name"], 
-                 xml_dict["lab"]["@version"], 
-                 " ", #xml_dict["lab"]["@author"],
-                 "")) #xml_dict["lab"]["description"]))
+    return(EVElab(xml_dict.get("lab", {}).get("@name", "EVE_CONVERTED"), 
+                 xml_dict.get("lab", {}).get("@version", "0.0.1"), 
+                 xml_dict.get("lab", {}).get("@author", ""),
+                 xml_dict.get("lab", {}).get("@description", "")))
 
 '''
 Extract Nodes
@@ -149,30 +177,35 @@ def extractNodes(xml_dict, lab):
     for XMLnode in xml_dict["lab"]["topology"]["nodes"]["node"]:
 
         node = EVEnode(
-            id = XMLnode["@id"],
-            name = XMLnode["@name"],
-            type = XMLnode["@type"],
-            template = XMLnode["@template"],
-            image = XMLnode["@image"],
-            console = XMLnode["@console"],
-            cpu = XMLnode["@cpu"],
-            cpuLimit = XMLnode["@cpulimit"],       
-            ram = XMLnode["@ram"],
-            ethernet = XMLnode["@ethernet"],
-            uuid = XMLnode["@uuid"],
-            qemuOptions = XMLnode["@qemu_options"],
-            qemuVersion = XMLnode["@qemu_version"],
-            qemuArch = XMLnode["@qemu_arch"],
-            configID = XMLnode["@config"],
-            left = XMLnode["@left"],
-            top = XMLnode["@top"],
+            id = XMLnode.get("@id", ""),
+            name = XMLnode.get("@name", ""),
+            type = XMLnode.get("@type", ""),
+            template = XMLnode.get("@template", ""),
+            image = XMLnode.get("@image", ""),
+            console = XMLnode.get("@console", ""),
+            cpu = XMLnode.get("@cpu", 0),
+            cpuLimit = XMLnode.get("@cpulimit", 0),
+            ram = XMLnode.get("@ram", 0),
+            ethernet = XMLnode.get("@ethernet", ""),
+            configID = XMLnode.get("@config", ""),
+            left = XMLnode.get("@left", ""),
+            top = XMLnode.get("@top", "")
         )
 
-        for interface in XMLnode["interface"]:
+        #check if only a single interface is contained, or if it is a list of interfaces
+        if isinstance(XMLnode.get("interface"), list):
+            for interface in XMLnode.get("interface", []):
+                node.interfaces.append(EVEinterface(
+                    id = interface.get("@id", ""),
+                    name = interface.get("@name", ""),
+                    networkID = interface.get("@network_id", "")
+                ))
+        else:
+            interface = XMLnode.get("interface")
             node.interfaces.append(EVEinterface(
-                id = interface["@id"],
-                name = interface["@name"],
-                networkID = interface["@network_id"]
+                id = interface.get("@id", ""),
+                name = interface.get("@name", ""),
+                networkID = interface.get("@network_id", "")
             ))
 
         lab.nodes.append(node)
@@ -211,7 +244,7 @@ Transfer the node's configuration from the EVE data struct to the CML nodeDict
 '''
 def transferNodeConfiguration(EVElabInput, node, nodeDict):
             for config in EVElabInput.configs:
-                if node.configID == config.id:
+                if node.id == config.id:
                     nodeDict["configuration"] = []
                     bConfig = base64.b64decode(config.encodedConfig)
                     decodedConfig = bConfig.decode('ascii').replace('\\n', '\n')
@@ -220,6 +253,31 @@ def transferNodeConfiguration(EVElabInput, node, nodeDict):
                         "content" : decodedConfig
                     })
 
+
+'''
+Compile Node Dict
+'''
+def compileNodeDict(node, interfaces):
+    nodeDict = {
+        "id" : "n" + node.id,
+        "label" : node.name,
+        "node_definition" : node.template,
+        "image_definition" : node.image,
+        "x" : int(node.left),
+        "y" : int(node.top),
+        "interfaces" : interfaces
+    }
+
+    if node.cpu != 0:
+        nodeDict["cpus"] = int(node.cpu)
+
+    if node.cpuLimit != 0:
+        nodeDict["cpu_limit"] = int(node.cpuLimit)
+
+    if node.ram != 0:
+        nodeDict["ram"] = int(node.ram)
+
+    return(nodeDict)
 '''
 Insert Nodes to CML YAML
     CMLYAML : the starting YAML for the CML lab
@@ -253,22 +311,11 @@ def insertCMLNodesLinks(EVElabInput, CMLYAML):
             if mapping["targetDef"] == node.template:
                 interfaces = createInterfaces(maxInterface, mapping["interfaces"]["dest_pattern"])
 
-        nodeDict = {
-            "id" : "n" + node.id,
-            "label" : node.name,
-            "node_definition" : node.template,
-            "image_definition" : node.image,
-            "cpus" : int(node.cpu),
-            "cpu_limit" : int(node.cpuLimit),
-            "ram" : int(node.ram),
-            "x" : int(node.left),
-            "y" : int(node.top),
-            "interfaces" : interfaces
-
-        }
+        nodeDict = compileNodeDict(node, interfaces)
 
         #transfer the configs from the old data structures to the new data structures
         transferNodeConfiguration(EVElabInput, node, nodeDict)
+
 
         #add node to tree
         CMLYAML["nodes"].append(nodeDict)

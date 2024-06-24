@@ -12,7 +12,18 @@
             
         },
         {
-            "description" : "Cisco IOSL2",
+            "description" : "Cisco IOL",
+            "sourceDef" : "iol",
+            "targetDef" : "ioll2-xe",
+            "interfaces" : 
+                {
+                    "source_pattern" : "e0/%",
+                    "dest_pattern" : "Ethernet0/%"
+                }
+            
+        },
+        {
+            "description" : "Cisco IOS Virtual L2",
             "sourceDef" : "viosl2",
             "targetDef" : "iosvl2",
             "interfaces" : 

@@ -27,10 +27,6 @@ class EVEnode:
     cpuLimit : int
     ram : int
     ethernet : int
-    uuid : str
-    qemuOptions : str
-    qemuVersion : float
-    qemuArch : str
     configID : int
     left : str
     top : str
@@ -38,7 +34,7 @@ class EVEnode:
 
     # left out delay, sat, icon
 
-    def __init__(self, id, name, type, template, image, console, cpu, cpuLimit, ram, ethernet, uuid, qemuOptions, qemuVersion, qemuArch, configID, left, top):
+    def __init__(self, id, name, type, template, image, console, cpu, cpuLimit, ram, ethernet, configID, left, top):
         self.id = id
         self.name = name
         self.type = type
@@ -49,10 +45,6 @@ class EVEnode:
         self.cpuLimit = cpuLimit
         self.ram = ram
         self.ethernet = ethernet
-        self.uuid = uuid
-        self.qemuOptions = qemuOptions
-        self.qemuVersion = qemuVersion
-        self.qemuArch = qemuArch
         self.configID = configID
         self.left = left
         self.top = top
