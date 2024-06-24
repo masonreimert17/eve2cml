@@ -4,8 +4,10 @@
             "description" : "Cisco IOS Virtual",
             "sourceDef" : "vios",
             "targetDef" : "iosv",
+            "cfg_filename" : "ios_config.txt",
             "interfaces" : 
                 {
+                    "if_offset" : "0",
                     "source_pattern" : "Gi0/%",
                     "dest_pattern" : "GigabitEthernet0/%"
                 }
@@ -15,8 +17,10 @@
             "description" : "Cisco IOL",
             "sourceDef" : "iol",
             "targetDef" : "ioll2-xe",
+            "cfg_filename" : "ios_config.txt",
             "interfaces" : 
                 {
+                    "if_offset" : "0",
                     "source_pattern" : "e0/%",
                     "dest_pattern" : "Ethernet0/%"
                 }
@@ -26,10 +30,25 @@
             "description" : "Cisco IOS Virtual L2",
             "sourceDef" : "viosl2",
             "targetDef" : "iosvl2",
+            "cfg_filename" : "ios_config.txt",
             "interfaces" : 
                 {
+                    "if_offset" : "0",
                     "source_pattern" : "Gi0/%",
                     "dest_pattern" : "GigabitEthernet0/%"
+                }
+            
+        },
+        {
+            "description" : "Cisco Cloud Services Router 1000v (CSR1000v)",
+            "sourceDef" : "csr1000vng",
+            "targetDef" : "csr1000v",
+            "cfg_filename" : "iosxe_config.txt",
+            "interfaces" : 
+                {
+                    "if_offset" : "1",
+                    "source_pattern" : "Gi%",
+                    "dest_pattern" : "GigabitEthernet%"
                 }
             
         }

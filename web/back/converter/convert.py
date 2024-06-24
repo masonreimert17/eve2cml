@@ -88,15 +88,15 @@ def findMaxInterface(inputInterfaces, nodeType):
 '''
 Create X number of interface config blocks using % template
 '''
-def createInterfaces(count, prefix):
+def createInterfaces(count, prefix, offset):
     i = 0
     interfaces = []
     while i <= int(count):
         interfaces.append({
             "id" : "i" + str(i), 
-            "label" : prefix.replace("%", str(i)),
+            "label" : prefix.replace("%", str(i + int(offset))),
             "type" : "physical",
-            "slot" : i
+            "slot" : i 
         })
         i+=1
 
@@ -133,6 +133,15 @@ def createLinks(inputInterfaces, nodeID, links, nodeType):
 
     return(links)
 
+'''
+Find the config file name from the mapper
+'''
+def findConfigFileName(node):
+    mappings = getMappings()
+    for mapping in mappings["node_definitions"]:
+        if mapping["targetDef"] == node.template:
+            return mapping["cfg_filename"]
+        
 # [-------------------- Extraction Functions --------------------]
 
 '''
@@ -249,7 +258,7 @@ def transferNodeConfiguration(EVElabInput, node, nodeDict):
                     bConfig = base64.b64decode(config.encodedConfig)
                     decodedConfig = bConfig.decode('ascii').replace('\\n', '\n')
                     nodeDict["configuration"].append({
-                        "name" : "ios_config.txt",
+                        "name" : findConfigFileName(node),
                         "content" : decodedConfig
                     })
 
@@ -271,7 +280,7 @@ def compileNodeDict(node, interfaces):
     if node.cpu != 0:
         nodeDict["cpus"] = int(node.cpu)
 
-    if node.cpuLimit != 0:
+    if int(node.cpuLimit) > 20:
         nodeDict["cpu_limit"] = int(node.cpuLimit)
 
     if node.ram != 0:
@@ -291,9 +300,15 @@ def insertCMLNodesLinks(EVElabInput, CMLYAML):
     for node in EVElabInput.nodes:
 
         #check if node is supported
+        supported = False
         for mapping in mappings["node_definitions"]:
             if mapping["sourceDef"] == node.template:
                 node.template = mapping["targetDef"]
+                supported = True
+
+        if supported == False:
+            print("Lab contains upsupported node of type " + node.template)
+            break
 
         #EVE-NG sees CPU Limit of 0 as unset, CML will not take this
         if int(node.cpuLimit) == 0: 
@@ -309,7 +324,7 @@ def insertCMLNodesLinks(EVElabInput, CMLYAML):
         mappings = getMappings()
         for mapping in mappings["node_definitions"]:
             if mapping["targetDef"] == node.template:
-                interfaces = createInterfaces(maxInterface, mapping["interfaces"]["dest_pattern"])
+                interfaces = createInterfaces(maxInterface, mapping["interfaces"]["dest_pattern"], mapping["interfaces"]["if_offset"])
 
         nodeDict = compileNodeDict(node, interfaces)
 
