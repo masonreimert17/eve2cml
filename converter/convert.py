@@ -33,6 +33,11 @@ def constructCMLLab(EVElabInput : EVElab, YAMLPath):
         yaml.dump(CMLYAML, file, default_flow_style=False)
         return(1)
 
+'''
+| Validate Mappings | 
+    only used in web version to validate a mapping exists for each node
+    + UUID : UUID file in static folder from back end
+'''
 def validate(uuid):
 
     package = {}
@@ -62,14 +67,19 @@ def validate(uuid):
 # [-------------------- Supporting Functions --------------------]
 
 '''
-Get Node->Node mappings from the JSON
+| Get Mappings |
+    Get Node to Node mappings from the JSON, this should be renamed.
 '''
 def getMappings():
     with open('mappings.json') as json_file:
         return(json.load(json_file))
 
 '''
-Find Max Interfaces
+| Find Max Interfaces |
+    Finds the highest interface number on a specified device.
+    This is needed because CML will only accept continuous interface lists.
+    + inputInterfaces : a list of interface objects to enum over
+    + nodeType : the pre-conversion node template, used to lookup node in mapping file
 '''
 def findMaxInterface(inputInterfaces, nodeType):
     maxInterface = 0
@@ -87,7 +97,11 @@ def findMaxInterface(inputInterfaces, nodeType):
     return(maxInterface)
 
 '''
-Create X number of interface config blocks using % template
+| Create Interfaces |
+    Create a config block for X number of interfaces, using % template.
+    + count : number of config blocks to create, after being determined by findMaxInterface()
+    + prefix : the text prefix before the interface number
+    + offset : used mainly to control if the node starts its numbering at 0 or 1
 '''
 def createInterfaces(count, prefix, offset):
     i = 0
@@ -104,7 +118,12 @@ def createInterfaces(count, prefix, offset):
     return(interfaces)
 
 '''
-Create link interface config blocks
+| Create Links |
+    Create link interface config blocks. 
+    + imputInterfaces : the pre-conversion list of interface objects
+    + nodeID : the node that we are creating links for
+    + links : the running list of links
+    + nodeType : the type of node (used for interface prefix)
 '''
 def createLinks(inputInterfaces, nodeID, links, nodeType):
     lidCounter = 0
@@ -135,7 +154,9 @@ def createLinks(inputInterfaces, nodeID, links, nodeType):
     return(links)
 
 '''
-Find the config file name from the mapper
+| Find Config File Name |
+    Find the config file name from the mapper. CML needs a name for each file it attaches to a node.
+    + node : the pre-conversion node object to lookup in mapper
 '''
 def findConfigFileName(node):
     mappings = getMappings()
@@ -146,7 +167,8 @@ def findConfigFileName(node):
 # [-------------------- Extraction Functions --------------------]
 
 '''
-Extract Configurations From EVE-NG XML Structure
+| Extract Configs |
+    Extract Configurations From EVE-NG XML Structure
     + xml_dict : the post conversion dictionary of the EVE-NG UNL File
     + lab : the EVE lab object to place the configurations in
 '''
@@ -158,7 +180,8 @@ def extractConfigs(xml_dict, lab):
             lab.configs.append(EVEconfig(id, encodedText))
 
 '''
-Open UNL File and Convert it to Dict
+| Open UNL |
+    Open UNL File and Convert it to Dict that is used to load into classes
     + filePath : the path of the UNL file to open
 '''
 def openUNL(filePath):
@@ -168,7 +191,8 @@ def openUNL(filePath):
     return(xmltodict.parse(xml_string))
 
 '''
-Create Lab (source lab)
+| Create Lab |
+    Create the lab class object and bootstrap it with metadata from the EVE-NG lab.
     + xml_dict : dict of UNL file outputted from openUNL()
 '''
 def createLab(xml_dict):
@@ -178,7 +202,10 @@ def createLab(xml_dict):
                  xml_dict.get("lab", {}).get("@description", "")))
 
 '''
-Extract Nodes
+|Extract Nodes|
+    Enum through the list of nodes in the XML from EVE-NG, create an obj for each.
+    Since interfaces is a sub-obj of nodes interfaces are ran here too.
+    Once nodes and interfaces are done, add the nodes to the lab
     + xml_dict : dict of UNL file outputted from openUNL()
     + lab : the EVE lab object to place the nodes and interfaces in
 '''
@@ -223,8 +250,9 @@ def extractNodes(xml_dict, lab):
 # [-------------------- Construction Functions--------------------]
 
 '''
-Bootstrap CML YAML Tree Roots
-    CMLYAML : the starting YAML for the CML lab
+| Bootstrap CML |
+    Bootstrap CML Tree Roots that are required for the YAML
+    + CMLYAML : the starting YAML for the CML lab
 '''
 def bootstrapCML():
     CMLYAML = {}
@@ -237,7 +265,8 @@ def bootstrapCML():
     return(CMLYAML)
 
 '''
-Insert CML Metadata
+| Insert CML Metadata |
+    Insert the metadata stored in the lab class into the CMLYAML.
     CMLYAML : the starting YAML for the CML lab
 '''
 def insertCMLMetadata(CMLYAML, EVElabInput):
@@ -247,10 +276,11 @@ def insertCMLMetadata(CMLYAML, EVElabInput):
     CMLYAML["lab"]["notes"] = "Author(from EVE-NG): " + EVElabInput.author
 
 '''
-Transfer the node's configuration from the EVE data struct to the CML nodeDict
-    EVElabInput : input of the lab object with the pre-conversion nodes
-    node : the pre-conversion EVE-NG node
-    nodeDict : the new node's data structure
+| Transfer Node Configuration |
+    Transfer the node's configuration from the EVE data struct to the CML nodeDict
+    + EVElabInput : input of the lab object with the pre-conversion nodes
+    + node : the pre-conversion EVE-NG node
+    + nodeDict : the new node's data structure
 '''
 def transferNodeConfiguration(EVElabInput, node, nodeDict):
             for config in EVElabInput.configs:
@@ -265,7 +295,10 @@ def transferNodeConfiguration(EVElabInput, node, nodeDict):
 
 
 '''
-Compile Node Dict
+| Compile Node Dict |
+    Create the branch of the YAML tree for a node, return this as a dict
+    + node : the kinda pre-conversion node. The template has already been changed #TODO - this should be not like this
+    + interfaces : the interfaces to add to the node, since CML stores them under the node branch
 '''
 def compileNodeDict(node, interfaces):
     nodeDict = {
@@ -289,7 +322,8 @@ def compileNodeDict(node, interfaces):
 
     return(nodeDict)
 '''
-Insert Nodes to CML YAML
+| Insert CML Node Links |
+    Insert Nodes & Links to the CML YAML File
     CMLYAML : the starting YAML for the CML lab
     EVElabInput : input of the lab object with the pre-conversion nodes
 '''
@@ -343,9 +377,10 @@ def insertCMLNodesLinks(EVElabInput, CMLYAML):
 
 
 '''
-Main Function - For direct invocation of this file via terminal
-    + -i : input file
-    + -o : output file
+| Main IF |
+    For direct invocation of this file via terminal
+    + -in : input file
+    + -out : output file
 '''
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert EVE-NG Lab to CML Lab')
