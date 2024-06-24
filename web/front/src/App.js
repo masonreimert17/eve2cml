@@ -5,6 +5,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import SelectorForm from './components/Selector Form/SelectorForm';
 import { useState, useEffect } from 'react';
 import { apiGet, downloadFile } from './components/HelperFunctions';
+import TableInput from './components/Table-Input/TableInput';
 
 function App() {
   const [backReady, setBackReady] = useState(false)
@@ -42,7 +43,7 @@ function App() {
  }
   return (
     <>
-      <Navbar className="bg-body-tertiary">
+      <Navbar className="bg-body-tertiary" data-bs-theme="dark">
         <Navbar.Brand className='ms-3' href="#home">Converter</Navbar.Brand>
       </Navbar>
 
@@ -50,14 +51,16 @@ function App() {
           <div className='d-flex justify-content-center'>
           <SelectorForm handleFile={handleFile}/>
         </div>
-      </Container>
-      {backReady && 
+        {backReady && 
       <>
+      <div className='mt-4'>
+      <TableInput></TableInput>
+      </div>
       
-      <p>your download is ready</p>
-    <button onClick={handleDownloadClick}>Download</button>
       </>
       }
+      </Container>
+      
     </>
   );
 }

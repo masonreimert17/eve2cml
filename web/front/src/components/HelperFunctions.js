@@ -41,3 +41,15 @@ function saveAsFile(text, filename) {
     a.download = filename;
     a.click(); // triggering it manually
   }
+  export function tableToJson(table) { 
+    var data = [];
+    for (var i = 1; i < table.rows.length; i++) { 
+        var tableRow = table.rows[i]; 
+        var rowData = []; 
+        for (var j = 0; j < tableRow.cells.length; j++) { 
+            rowData.push(tableRow.cells[j].innerHTML);
+        } 
+        data.push(rowData); 
+    } 
+    return data; 
+}
