@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import Select from 'react-select';
+import { tableToJson } from '../HelperFunctions';
 function TableInput({ json = {} }) {
     const initialJson = {
         "cisco_templates_avail": [
@@ -80,6 +81,10 @@ function TableInput({ json = {} }) {
     const transformedOptions = initialJson.cisco_templates_avail.map(opt => ({ label: opt, value: opt }));
     set_cisco_templates_avail(transformedOptions);
   }, []);
+  const handleTableSubmit = ()=>{
+    let table = tableToJson(document.getElementById('the-table'))
+    console.log(table)
+  }
   const handleSelect = (nodeId, selectedItem) => {
     setJsonData((prevState) => {
       const updatedNodes = prevState.nodes.map((node) => {
@@ -97,7 +102,7 @@ function TableInput({ json = {} }) {
     <Table striped bordered hover id='the-table'>
       <thead>
         <tr>
-          <th>Node ID</th>
+          <th>NhandleSelecode ID</th>
           <th>Eve Template</th>
           <th>Cisco Target</th>
         </tr>
@@ -118,7 +123,7 @@ function TableInput({ json = {} }) {
       </tbody>
     </Table>
     <div className='d-flex justify-items-end'>
-        <button onClick={console.log(table)} className='btn btn-primary'>Submit</button>
+        <button onClick={handleTableSubmit} className='btn btn-primary'>Submit</button>
     </div>
     </>
   );
