@@ -1,0 +1,26 @@
+{
+    "node_definitions" : [
+        {
+            "description" : "Cisco IOS Virtual",
+            "sourceDef" : "vios",
+            "targetDef" : "iosv",
+            "interfaces" : 
+                {
+                    "source_pattern" : "Gi0/%",
+                    "dest_pattern" : "GigabitEthernet0/%"
+                }
+            
+        },
+        {
+            "description" : "Cisco IOSL2",
+            "sourceDef" : "viosl2",
+            "targetDef" : "iosvl2",
+            "interfaces" : 
+                {
+                    "source_pattern" : "Gi0/%",
+                    "dest_pattern" : "GigabitEthernet0/%"
+                }
+            
+        }
+    ]
+}
