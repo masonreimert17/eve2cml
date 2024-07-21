@@ -6,7 +6,7 @@ import SelectorForm from './components/Selector Form/SelectorForm';
 import { useState, useEffect } from 'react';
 import { apiGet, downloadFile } from './components/HelperFunctions';
 import TableInput from './components/Table-Input/TableInput';
-
+import { FileUploader } from "react-drag-drop-files";
 function App() {
   const [backReady, setBackReady] = useState(false)
   
@@ -49,7 +49,10 @@ function App() {
 
       <Container>
           <div className='d-flex justify-content-center'>
-          <SelectorForm handleFile={handleFile}/>
+            <div className='mt-5'>
+            <FileUploader handleChange={handleFile} name="file" />
+
+            </div>
         </div>
         {backReady && 
       <>

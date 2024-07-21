@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 from io import BytesIO
 import uuid
-from converter import convert
-
-
+import os
+#from converter import convert
+from datetime import datetime
+import FileMetadataDB 
+import FileWatcherDaemon
 app = Flask(__name__)
 
 
@@ -26,10 +28,13 @@ def ingestFile():
         with open('./static/'+fileName, "wb") as f:
             f.write(file_bytesio_object.getbuffer())
         f.close
+        db = FileMetadataDB.FileMetadataDB()
+        db.insert_file_metadata(fileName,datetime.now().timestamp())
         d['download-url'] = fileName
 
         #link to converter
-        d['validation'] = convert.validate(str(myuuid))
+        #d['validation'] = convert.validate(str(myuuid))
+        
 
     except Exception as e:
         print(f"Couldn't upload file {e}")
@@ -37,4 +42,9 @@ def ingestFile():
     return jsonify(d)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    staticDirectory = './static'
+    if not os.path.exists(staticDirectory):
+        os.makedirs(staticDirectory)
+    fwd = FileWatcherDaemon.FileWatcherDaemon()
+    fwd.start()
+    app.run(debug=False)
